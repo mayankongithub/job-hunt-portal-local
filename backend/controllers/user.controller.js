@@ -7,34 +7,52 @@ import cloudinary from "../utils/cloudinary.js";
 export const register = async (req, res) => {
     try {
         const { fullname, email, phoneNumber, password, role } = req.body;
-         
+
+        // Check if required fields are present
         if (!fullname || !email || !phoneNumber || !password || !role) {
             return res.status(400).json({
                 message: "Something is missing",
                 success: false
             });
-        };
-        const file = req.file;
+        }
+
+        const file = req.file; // This will contain the uploaded file
+
+        // Check if file is provided
+        if (!file) {
+            return res.status(400).json({
+                message: "No file uploaded",
+                success: false
+            });
+        }
+
+        // Convert file to Data URI
         const fileUri = getDataUri(file);
+
+        // Upload the file to Cloudinary
         const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
 
+        // Check if user already exists
         const user = await User.findOne({ email });
         if (user) {
             return res.status(400).json({
-                message: 'User already exist with this email.',
+                message: 'User already exists with this email.',
                 success: false,
-            })
+            });
         }
+
+        // Hash password before storing
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Create new user
         await User.create({
             fullname,
             email,
             phoneNumber,
             password: hashedPassword,
             role,
-            profile:{
-                profilePhoto:cloudResponse.secure_url,
+            profile: {
+                profilePhoto: cloudResponse.secure_url,
             }
         });
 
@@ -42,8 +60,10 @@ export const register = async (req, res) => {
             message: "Account created successfully.",
             success: true
         });
+
     } catch (error) {
         console.log(error);
+        return res.status(500).json({ message: 'Server error', success: false });
     }
 }
 export const login = async (req, res) => {
@@ -116,16 +136,24 @@ export const updateProfile = async (req, res) => {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
         
         const file = req.file;
-        // cloudinary ayega idhar
-        const fileUri = getDataUri(file);
-        const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
 
+        // Ensure file exists before proceeding with Cloudinary upload
+        if (file) {
+            const fileUri = getDataUri(file);  // Get Data URI for the file
+            const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
 
+            // Updating the resume field if file was uploaded
+            if(cloudResponse){
+                user.profile.resume = cloudResponse.secure_url; // save the Cloudinary URL
+                user.profile.resumeOriginalName = file.originalname; // Save the original file name
+            }
+        }
 
         let skillsArray;
-        if(skills){
+        if (skills) {
             skillsArray = skills.split(",");
         }
+
         const userId = req.id; // middleware authentication
         let user = await User.findById(userId);
 
@@ -135,19 +163,13 @@ export const updateProfile = async (req, res) => {
                 success: false
             })
         }
-        // updating data
-        if(fullname) user.fullname = fullname
-        if(email) user.email = email
-        if(phoneNumber)  user.phoneNumber = phoneNumber
-        if(bio) user.profile.bio = bio
-        if(skills) user.profile.skills = skillsArray
-      
-        // resume comes later here...
-        if(cloudResponse){
-            user.profile.resume = cloudResponse.secure_url // save the cloudinary url
-            user.profile.resumeOriginalName = file.originalname // Save the original file name
-        }
 
+        // Update the user data
+        if (fullname) user.fullname = fullname;
+        if (email) user.email = email;
+        if (phoneNumber) user.phoneNumber = phoneNumber;
+        if (bio) user.profile.bio = bio;
+        if (skills) user.profile.skills = skillsArray;
 
         await user.save();
 
@@ -161,9 +183,9 @@ export const updateProfile = async (req, res) => {
         }
 
         return res.status(200).json({
-            message:"Profile updated successfully.",
+            message: "Profile updated successfully.",
             user,
-            success:true
+            success: true
         })
     } catch (error) {
         console.log(error);
