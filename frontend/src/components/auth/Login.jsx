@@ -18,7 +18,7 @@ const Login = () => {
         password: "",
         role: "",
     });
-    const { loading,user } = useSelector(store => store.auth);
+    const { loading } = useSelector(store => store.auth);
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -36,10 +36,13 @@ const Login = () => {
                 },
                 withCredentials: true,
             });
+            
             if (res.data.success) {
-                dispatch(setUser(res.data.user));
-                navigate("/");
-                toast.success(res.data.message);
+                // After successful login, redirect to OTP verification page
+                toast.success("Login successful, please verify OTP");
+                navigate("/otp-verification", {
+                    state: { email: input.email }  // Pass email to OTP verification page
+                });
             }
         } catch (error) {
             console.log(error);
@@ -48,11 +51,7 @@ const Login = () => {
             dispatch(setLoading(false));
         }
     }
-    useEffect(()=>{
-        if(user){
-            navigate("/");
-        }
-    },[])
+
     return (
         <div>
             <Navbar />
@@ -106,10 +105,16 @@ const Login = () => {
                             </div>
                         </RadioGroup>
                     </div>
-                    {
-                        loading ? <Button className="w-full my-4"> <Loader2 className='mr-2 h-4 w-4 animate-spin' /> Please wait </Button> : <Button type="submit" className="w-full my-4">Login</Button>
-                    }
-                    <span className='text-sm'>Don't have an account? <Link to="/signup" className='text-blue-600'>Signup</Link></span>
+                    {loading ? (
+                        <Button className="w-full my-4">
+                            <Loader2 className='mr-2 h-4 w-4 animate-spin' /> Please wait
+                        </Button>
+                    ) : (
+                        <Button type="submit" className="w-full my-4">Login</Button>
+                    )}
+                    <span className='text-sm'>
+                        Don't have an account? <Link to="/signup" className='text-blue-600'>Signup</Link>
+                    </span>
                 </form>
             </div>
         </div>

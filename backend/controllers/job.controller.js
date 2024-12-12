@@ -3,6 +3,9 @@ import { Job } from "../models/job.model.js";
 // admin post krega job
 export const postJob = async (req, res) => {
     try {
+
+        console.log("jojo");
+        
         const { title, description, requirements, salary, location, jobType, experience, position, companyId } = req.body;
         const userId = req.id;
 
@@ -100,3 +103,32 @@ export const getAdminJobs = async (req, res) => {
         console.log(error);
     }
 }
+
+export const getTotalJobPostedLast30Days = async (req, res) => {
+    try {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+
+        // Find all jobs where jobPosted is true or lastPost is within the last 30 days
+        const jobs = await Job.find({
+            $or: [
+                { jobPosted: true }, // Jobs posted in the last 30 days
+                { lastPost: { $gte: thirtyDaysAgo } } // Jobs with lastPost within the last 30 days
+            ]
+        });
+
+        const totalJobPosted = jobs.length;
+
+        return res.json({
+            success: true,
+            totalJobPosted,
+            message: `Total jobs posted in the last 30 days: ${totalJobPosted}`
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error retrieving total jobs posted in the last 30 days"
+        });
+    }
+};

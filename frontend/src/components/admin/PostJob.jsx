@@ -42,12 +42,12 @@ const PostJob = () => {
         e.preventDefault();
         try {
             setLoading(true);
+            console.log("pinku");
             const res = await axios.post(`${JOB_API_END_POINT}/post`, input,{
-                headers:{
-                    'Content-Type':'application/json'
-                },
                 withCredentials:true
             });
+            console.log("pinku");
+            
             if(res.data.success){
                 toast.success(res.data.message);
                 navigate("/admin/jobs");
