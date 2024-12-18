@@ -14,6 +14,12 @@ import AdminJobs from "./components/admin/AdminJobs";
 import PostJob from './components/admin/PostJob'
 import Applicants from './components/admin/Applicants'
 import ProtectedRoute from './components/admin/ProtectedRoute'
+import OTPVerification from './components/auth/OTPverification'
+import Payment from './components/Payment'
+
+
+
+
 
 
 const appRouter = createBrowserRouter([
@@ -28,6 +34,10 @@ const appRouter = createBrowserRouter([
   {
     path: '/signup',
     element: <Signup />
+  },
+  {
+    path: '/otp-verification',
+    element: <OTPVerification />
   },
   {
     path: "/jobs",
@@ -70,6 +80,11 @@ const appRouter = createBrowserRouter([
     path:"/admin/jobs/:id/applicants",
     element:<ProtectedRoute><Applicants/></ProtectedRoute> 
   },
+  {
+    path:"/payment",
+    element:<Payment/>
+  }
+  
 
 ])
 function App() {

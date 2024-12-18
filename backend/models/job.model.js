@@ -16,9 +16,9 @@ const jobSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    experienceLevel:{
-        type:Number,
-        required:true,
+    experienceLevel: {
+        type: Number,
+        required: true,
     },
     location: {
         type: String,
@@ -47,6 +47,34 @@ const jobSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Application',
         }
-    ]
-},{timestamps:true});
+    ],
+    jobPosted: {
+        type: Boolean,
+        default: false, // Will track if the job has been posted in the last 30 days
+    },
+    // Store the timestamp of the last post
+    lastPost: {
+        type: Date,
+        default: null
+    }
+}, { timestamps: true });
+
+// Pre-save hook to handle updating the jobPosted flag
+jobSchema.pre('save', function (next) {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+
+    // If lastPost is within the last 30 days, set jobPosted flag to true
+    if (this.lastPost && this.lastPost >= thirtyDaysAgo) {
+        this.jobPosted = true;
+    } else {
+        this.jobPosted = false;
+    }
+
+    // Ensure that lastPost is updated with the current date
+    this.lastPost = now;
+
+    next();
+});
+
 export const Job = mongoose.model("Job", jobSchema);
